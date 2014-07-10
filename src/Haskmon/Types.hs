@@ -1,3 +1,4 @@
+-- vim:fdm=marker
 {-# LANGUAGE OverloadedStrings, FlexibleContexts #-}
 
 -- | All of the types returned by the API. From Pokemons to Abilities
@@ -13,6 +14,8 @@ import Data.Aeson
 import Data.Aeson.Types
 import Data.Time.Format
 import Data.Time.Clock
+import Data.List(groupBy)
+import Data.Function(on)
 
 import System.Locale
 
@@ -21,6 +24,7 @@ import Control.Monad(mzero)
 
 import Haskmon.Resource(getResource)
 
+-- {{{ MetaData
 -- | Metadata that all resources (except Pokedex) have in common
 data MetaData = MetaData {
               resourceUri :: String,
@@ -36,9 +40,8 @@ getMetadata v = MetaData <$>
               where convert :: Parser String -> Parser UTCTime
                     convert ps = readTime defaultTimeLocale formatStr <$> ps
                     formatStr = "%FT%H:%M:%Q"
-
--------------------------------------------------------------------------------------------
--- Pokedex
+-- }}}
+-- Pokedex {{{
 data Pokedex = Pokedex {
                pokedexName :: String,
                pokedexPokemons :: [MetaPokemon]
@@ -56,22 +59,25 @@ instance FromJSON Pokedex where
   parseJSON (Object o) = Pokedex <$> o .: "name" <*> o .: "pokemon"
   parseJSON _ = mzero
 
--------------------------------------------------------------------------------------------
--- Pokemon Data and FromJson instance
+-- }}}
+-- Pokemon {{{
 data Pokemon = Pokemon {
              pokemonName :: String,
-             nationalId :: Int,
+             nationalId :: Word,
              abilities :: [MetaAbility],
              moves :: [MetaMove],
              types :: [MetaType],
+             eggCycle :: Word,
              eggGroups :: [MetaEgg],
-             catchRate :: Int,
-             hp :: Int,
-             attack :: Int,
-             defense :: Int,
-             spAtk :: Int,
-             spDef :: Int,
-             speed :: Int,
+             catchRate :: Word,
+             hp :: Word,
+             attack :: Word,
+             defense :: Word,
+             spAtk :: Word,
+             spDef :: Word,
+             speed :: Word,
+             descriptions :: MetaDescriptionList,
+             sprites :: [MetaSprite],
              metadata :: MetaData
              }
 
@@ -85,6 +91,7 @@ instance FromJSON Pokemon where
                                 v .: "abilities" <*>
                                 v .: "moves" <*>
                                 v .: "types" <*>
+                                v .: "egg_cycles" <*>
                                 v .: "egg_groups" <*>
                                 v .: "catch_rate" <*>
                                 v .: "hp" <*>
@@ -93,12 +100,14 @@ instance FromJSON Pokemon where
                                 v .: "sp_atk" <*>
                                 v .: "sp_def" <*>
                                 v .: "speed" <*>
+                                v .: "sprites" <*>
+                                v .: "descriptions" <*>
                                 getMetadata v
         parseJSON _ = mzero
 
 
--------------------------------------------------------------------------------------------
--- Ability Data and FromJSON
+--- }}}
+-- Ability {{{
 data MetaAbility = MetaAbility { mAbilityName :: String, getAbility :: IO Ability}
 data Ability = Ability { abilityName :: String,
                          abilityDescription :: String,
@@ -120,8 +129,8 @@ instance FromJSON MetaAbility where
                                            (getResource <$> o .: "resource_uri")
         parseJSON _ = mzero
 
--------------------------------------------------------------------------------------------
--- Types
+-- }}}
+-- Types {{{
 data MetaType = MetaType { mTypeName :: String, getType :: IO Type }
 data Type = Type {
           typeName :: String,
@@ -152,8 +161,8 @@ instance FromJSON MetaType where
                                             (getResource <$> o .: "resource_uri")
         parseJSON _ = mzero
 
--------------------------------------------------------------------------------------------
--- Moves
+-- }}}
+-- Moves {{{
 data MetaMove = MetaMove { mMoveName :: String,
                            mMoveLearnType :: String,
                            mLevel :: Maybe Word,
@@ -185,8 +194,8 @@ instance FromJSON MetaMove where
                                             (getResource <$> o .: "resource_uri")
         parseJSON _ = mzero
 
--------------------------------------------------------------------------------------------
--- EGGS!!!
+-- }}}
+-- EGGS!!! {{{
 data MetaEgg = MetaEgg { mEggGroupName :: String,
                          getEggGroup :: IO EggGroup
                        }
@@ -211,3 +220,94 @@ instance FromJSON MetaEgg where
                          o .: "name" <*>
                          (getResource <$> o .: "resource_uri")
   parseJSON _ = mzero
+--- }}}
+-- Description {{{
+-- | MetaDescription come as a list of ordered sets. These are created by joining
+-- together the elements that have the same "name".
+newtype MetaDescriptionList = MetaDescriptionList { metaDescriptionSets :: [MetaDescriptionSet] } deriving Show
+data MetaDescriptionSet = MetaDescriptionSet {
+                            mDescriptionName :: String,
+                            getDescriptions :: [IO Description]
+                          }
+data Description = Description {
+                    descriptionName :: String,
+                    games :: [MetaGame],
+                    descriptionPokemon :: MetaPokemon,
+                    descriptionMetadata :: MetaData
+                   }
+
+instance Show Description where
+  show d = "<Description - " ++ descriptionName d ++ ">"
+
+instance Show MetaDescriptionSet where
+  show set = "<DescriptionSet - " ++ mDescriptionName set ++ ">"
+
+instance FromJSON Description where
+  parseJSON (Object o) = Description <$>
+                            o .: "name" <*>
+                            o .: "games" <*>
+                            o .: "pokemon" <*>
+                            getMetadata o
+  parseJSON _ = mzero
+
+instance FromJSON MetaDescriptionList where
+  parseJSON (Array a) = MetaDescriptionList <$>
+                            map groupSets . groupBy ((==) `on` mDescriptionName) <$> (mapM go $ toList a)
+                  where go (Object o) = MetaDescriptionSet <$> o .: "name" <*> ((:[]) . getResource <$> o .: "resource_uri")
+                        go _ = mzero
+                        groupSets :: [MetaDescriptionSet] -> MetaDescriptionSet
+                        groupSets likeSets = foldr1 go' likeSets
+                                where go' (MetaDescriptionSet _ xs) acc@(MetaDescriptionSet _ ys) = acc { getDescriptions = xs ++ ys}
+
+  parseJSON _ = mzero
+
+-- }}}
+--  Game {{{
+data MetaGame = MetaGame { mGameName :: String, getGame :: IO Game }
+data Game = Game {
+             gameName :: String,
+             gameGeneration :: Word,
+             releaseYear :: Word,
+             gameMetadata :: MetaData
+            }
+
+instance Show Game where
+  show g = "<Game - " ++ gameName g ++ ">"
+
+instance FromJSON MetaGame where
+  parseJSON (Object o) = MetaGame <$>
+                           o .: "name" <*> (getResource <$> o .: "resource_uri")
+  parseJSON _ = mzero
+
+instance FromJSON Game where
+  parseJSON (Object o) = Game <$>
+                          o .: "name"<*>
+                          o .: "generation" <*>
+                          o .: "release_year" <*>
+                          getMetadata o
+  parseJSON _ = mzero
+-- }}}
+-- Sprite {{{
+data MetaSprite = MetaSprite { mSpriteName :: String, getSprite :: IO Sprite }
+data Sprite = Sprite {
+                spriteName :: String,
+                spritePokemon :: MetaPokemon,
+                spriteImage :: String -- Just a plain URI
+              }
+
+instance Show Sprite where
+  show s = "<Sprite - " ++ spriteName s ++ ">"
+
+instance FromJSON MetaSprite where
+  parseJSON (Object o) = MetaSprite <$>
+                            o .: "name" <*>
+                            (getResource <$> o .: "resource_uri")
+  parseJSON _ = mzero
+
+instance FromJSON Sprite where
+  parseJSON (Object o) = Sprite <$>
+                            o .: "name" <*>
+                            o .: "pokemon" <*>
+                            o .: "image"
+  parseJSON _ = mzero
+-- }}}

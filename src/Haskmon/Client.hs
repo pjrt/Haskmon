@@ -3,7 +3,12 @@ module Haskmon.Client(
               getPokemonById,
               getPokemonByName,
               getAbilityById,
-              getMoveById
+              getMoveById,
+              getTypeById,
+              getEggGroupById,
+              getDescriptionById,
+              getGameById,
+              getSpriteById
 ) where
 
 import Haskmon.Types
@@ -43,7 +48,25 @@ getAbilityById = getResourceById "ability"
 getMoveById :: ID -> IO Move
 getMoveById = getResourceById "move"
 
+-- | Get a type by ID
+getTypeById :: ID -> IO Type
+getTypeById = getResourceById "type"
+--
+-- | Get a egg group by ID
+getEggGroupById :: ID -> IO EggGroup
+getEggGroupById = getResourceById "egg"
 
+-- | Get a description group by ID
+getDescriptionById :: ID -> IO Description
+getDescriptionById = getResourceById "description"
+
+-- | Get a game by ID
+getGameById :: ID -> IO Description
+getGameById = getResourceById "game"
+
+-- | Get Sprite by ID
+getSpriteById :: ID -> IO Sprite
+getSpriteById = getResourceById "sprite"
 
 -- | Utility wrapper for `ById` functions
 getResourceById :: FromJSON a => String -> ID -> IO a

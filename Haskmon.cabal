@@ -17,8 +17,7 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Haskmon.Types,
-                       Haskmon.Client
+  exposed-modules:     Haskmon
   -- other-modules:
   -- other-extensions:
   build-depends:       base >=4.7 && <4.8,

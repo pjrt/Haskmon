@@ -40,15 +40,13 @@ getMetadata v = MetaData <$>
                     convert (v .: "modified")
               where convert :: Parser String -> Parser UTCTime
                     convert ps = readTime defaultTimeLocale formatStr <$> ps
-                    formatStr = "%FT%H:%M:%Q"
+                    formatStr = "%FT%R:%S%Q"
 -- }}}
 -- Pokedex {{{
 data Pokedex = Pokedex {
                pokedexName :: String,
                pokedexPokemons :: [MetaPokemon]
                }
-
-data MetaPokemon = MetaPokemon { mpName :: String, getPokemon :: IO Pokemon }
 
 instance Show Pokedex where
   show p = "<Pokedex - " ++ pokedexName p ++ ">"
@@ -62,6 +60,7 @@ instance FromJSON Pokedex where
 
 -- }}}
 -- Pokemon {{{
+data MetaPokemon = MetaPokemon { mpName :: String, getPokemon :: IO Pokemon }
 data Pokemon = Pokemon {
              pokemonName :: String,
              nationalId :: Word,
@@ -233,13 +232,14 @@ data MetaDescriptionSet = MetaDescriptionSet {
                           }
 data Description = Description {
                     descriptionName :: String,
+                    descriptionText :: String,
                     games :: [MetaGame],
                     descriptionPokemon :: MetaPokemon,
                     descriptionMetadata :: MetaData
                    }
 
 instance Show Description where
-  show d = "<Description - " ++ descriptionName d ++ ">"
+  show d = "<Description - " ++ descriptionText d ++ ">"
 
 instance Show MetaDescriptionSet where
   show set = "<DescriptionSet - " ++ mDescriptionName set ++ ">"
@@ -247,6 +247,7 @@ instance Show MetaDescriptionSet where
 instance FromJSON Description where
   parseJSON (Object o) = Description <$>
                             o .: "name" <*>
+                            o .: "description" <*>
                             o .: "games" <*>
                             o .: "pokemon" <*>
                             getMetadata o
@@ -266,7 +267,7 @@ instance FromJSON MetaDescriptionList where
 
   parseJSON _ = mzero
 
--- }}}
+
 --  Game {{{
 data MetaGame = MetaGame { mGameName :: String, getGame :: IO Game }
 data Game = Game {

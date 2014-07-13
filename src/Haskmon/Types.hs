@@ -14,8 +14,9 @@ import Data.Aeson
 import Data.Aeson.Types
 import Data.Time.Format
 import Data.Time.Clock
-import Data.List(groupBy)
+import Data.List(find)
 import Data.Function(on)
+import qualified Data.Map.Lazy as Map
 
 import System.Locale
 
@@ -251,14 +252,17 @@ instance FromJSON Description where
                             getMetadata o
   parseJSON _ = mzero
 
+type MdsMap = Map.Map String [IO Description]
 instance FromJSON MetaDescriptionList where
   parseJSON (Array a) = MetaDescriptionList <$>
-                            map groupSets . groupBy ((==) `on` mDescriptionName) <$> (mapM go $ toList a)
-                  where go (Object o) = MetaDescriptionSet <$> o .: "name" <*> ((:[]) . getResource <$> o .: "resource_uri")
-                        go _ = mzero
-                        groupSets :: [MetaDescriptionSet] -> MetaDescriptionSet
-                        groupSets likeSets = foldr1 go' likeSets
-                                where go' (MetaDescriptionSet _ xs) acc@(MetaDescriptionSet _ ys) = acc { getDescriptions = xs ++ ys}
+                            Map.foldMapWithKey (\k v -> [MetaDescriptionSet k v])
+                                  <$> mappedSets
+                  where mappedSets = foldr go (pure Map.empty) (toList a)
+                        go :: Value -> Parser MdsMap -> Parser MdsMap
+                        go (Object o) acc = do
+                          acc' <- acc
+                          (nextName, nextURI) <- (,) <$> o .: "name" <*> (getResource <$> o .: "resource_uri")
+                          return $ Map.insertWith (++) nextName [nextURI] acc'
 
   parseJSON _ = mzero
 

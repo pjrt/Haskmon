@@ -76,8 +76,8 @@ data Pokemon = Pokemon {
              spAtk :: Word,
              spDef :: Word,
              speed :: Word,
-             descriptions :: MetaDescriptionList,
              sprites :: [MetaSprite],
+             descriptions :: MetaDescriptionList,
              metadata :: MetaData
              }
 
@@ -223,7 +223,8 @@ instance FromJSON MetaEgg where
 --- }}}
 -- Description {{{
 -- | MetaDescription come as a list of ordered sets. These are created by joining
--- together the elements that have the same "name".
+-- together the elements that have the same "name", meaning that they are joined by the descriptions' generation.
+-- At the moment, the meta data in the pokemon response does not contain the for the description, only the generation.
 newtype MetaDescriptionList = MetaDescriptionList { metaDescriptionSets :: [MetaDescriptionSet] } deriving Show
 data MetaDescriptionSet = MetaDescriptionSet {
                             mDescriptionName :: String,

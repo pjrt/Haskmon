@@ -15,8 +15,6 @@ import Data.Aeson.Types
 import Data.Time.Format
 import Data.Time.Clock
 import Data.List(find)
-import Data.Function(on)
-import qualified Data.Map.Lazy as Map
 
 import System.Locale
 
@@ -28,10 +26,10 @@ import Haskmon.Resource(getResource)
 -- {{{ MetaData
 -- | Metadata that all resources (except Pokedex) have in common
 data MetaData = MetaData {
-              resourceUri :: String,
-              created :: UTCTime,
-              modified :: UTCTime
-              }
+                  resourceUri :: String,
+                  created :: UTCTime,
+                  modified :: UTCTime
+                }
 
 getMetadata :: Object -> Parser MetaData
 getMetadata v = MetaData <$>
@@ -62,23 +60,23 @@ instance FromJSON Pokedex where
 -- Pokemon {{{
 data MetaPokemon = MetaPokemon { mpName :: String, getPokemon :: IO Pokemon }
 data Pokemon = Pokemon {
-             pokemonName :: String,
-             nationalId :: Word,
-             abilities :: [MetaAbility],
-             moves :: [MetaMove],
-             types :: [MetaType],
-             eggCycle :: Word,
-             eggGroups :: [MetaEgg],
-             catchRate :: Word,
-             hp :: Word,
-             attack :: Word,
-             defense :: Word,
-             spAtk :: Word,
-             spDef :: Word,
-             speed :: Word,
-             sprites :: [MetaSprite],
-             descriptions :: [MetaDescription],
-             metadata :: MetaData
+                  pokemonName :: String,
+                  pokemonNationalId :: Word,
+                  pokemonAbilities :: [MetaAbility],
+                  pokemonMoves :: [MetaMove],
+                  pokemonTypes :: [MetaType],
+                  pokemonEggCycle :: Word,
+                  pokemonEggGroups :: [MetaEgg],
+                  pokemonCatchRate :: Word,
+                  pokemonHp :: Word,
+                  pokemonAttack :: Word,
+                  pokemonDefense :: Word,
+                  pokemonSpAtk :: Word,
+                  pokemonSpDef :: Word,
+                  pokemonSpeed :: Word,
+                  pokemonSprites :: [MetaSprite],
+                  pokemonDescriptions :: [MetaDescription],
+                  pokemonMetadata :: MetaData
              }
 
 instance Show Pokemon where
@@ -107,6 +105,18 @@ instance FromJSON Pokemon where
 
 
 --- }}}
+-- Evolution {{{
+{- At the moment, evolutions don't seem to be very consistent or complete (in the Rest API).
+ - Ignoring for now
+data Evolution = Evolution {
+                    evolutionName :: String,
+                    evolutionMethod :: EvolutionMethod
+                    evolutionPokemon :: IO Pokemon
+                 }
+data EvolutionMethod = LevelUp { evolutionLevel :: Word }
+                     | Friendship
+-}
+-- }}}
 -- Ability {{{
 data MetaAbility = MetaAbility { mAbilityName :: String, getAbility :: IO Ability}
 data Ability = Ability { abilityName :: String,
@@ -133,13 +143,13 @@ instance FromJSON MetaAbility where
 -- Types {{{
 data MetaType = MetaType { mTypeName :: String, getType :: IO Type }
 data Type = Type {
-          typeName :: String,
-          ineffective :: [Type],
-          noEffect :: [Type],
-          resistance :: [Type],
-          superEffective :: [Type],
-          weakness :: [Type],
-          typeMetadata :: MetaData
+            typeName :: String,
+            typeIneffective :: [Type],
+            typeNoEffect :: [Type],
+            typeResistance :: [Type],
+            typeSuperEffective :: [Type],
+            typeWeakness :: [Type],
+            typeMetadata :: MetaData
           }
 
 instance Show Type where
@@ -168,12 +178,12 @@ data MetaMove = MetaMove { mMoveName :: String,
                            mLevel :: Maybe Word,
                            getMove :: IO Move}
 data Move = Move {
-          moveName :: String,
-          power :: Int,
-          pp :: Int,
-          accuracy :: Int,
-          moveMetadata :: MetaData
-          }
+              moveName :: String,
+              movePower :: Int,
+              movePp :: Int,
+              moveAccuracy :: Int,
+              moveMetadata :: MetaData
+            }
 
 instance Show Move where
   show m = "<Move - " ++ moveName m ++ ">"
@@ -229,7 +239,7 @@ data MetaDescription = MetaDescription {
 data Description = Description {
                     descriptionName :: String,
                     descriptionText :: String,
-                    games :: [MetaGame],
+                    descriptionGames :: [MetaGame],
                     descriptionPokemon :: MetaPokemon,
                     descriptionMetadata :: MetaData
                    }
@@ -249,7 +259,6 @@ instance FromJSON Description where
                             getMetadata o
   parseJSON _ = mzero
 
-type MdsMap = Map.Map String [IO Description]
 instance FromJSON MetaDescription where
   parseJSON (Object o) = MetaDescription <$>
                             o .: "name" <*>
@@ -257,13 +266,13 @@ instance FromJSON MetaDescription where
 
   parseJSON _ = mzero
 
-
+-- }}}
 --  Game {{{
 data MetaGame = MetaGame { mGameName :: String, getGame :: IO Game }
 data Game = Game {
              gameName :: String,
              gameGeneration :: Word,
-             releaseYear :: Word,
+             gameReleaseYear :: Word,
              gameMetadata :: MetaData
             }
 

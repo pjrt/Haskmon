@@ -77,7 +77,7 @@ data Pokemon = Pokemon {
              spDef :: Word,
              speed :: Word,
              sprites :: [MetaSprite],
-             descriptions :: MetaDescriptionList,
+             descriptions :: [MetaDescription],
              metadata :: MetaData
              }
 
@@ -222,13 +222,9 @@ instance FromJSON MetaEgg where
   parseJSON _ = mzero
 --- }}}
 -- Description {{{
--- | MetaDescription come as a list of ordered sets. These are created by joining
--- together the elements that have the same "name", meaning that they are joined by the descriptions' generation.
--- At the moment, the meta data in the pokemon response does not contain the for the description, only the generation.
-newtype MetaDescriptionList = MetaDescriptionList { metaDescriptionSets :: [MetaDescriptionSet] } deriving Show
-data MetaDescriptionSet = MetaDescriptionSet {
+data MetaDescription = MetaDescription {
                             mDescriptionName :: String,
-                            getDescriptions :: [IO Description]
+                            getDescriptions :: IO Description
                           }
 data Description = Description {
                     descriptionName :: String,
@@ -241,8 +237,8 @@ data Description = Description {
 instance Show Description where
   show d = "<Description - " ++ descriptionText d ++ ">"
 
-instance Show MetaDescriptionSet where
-  show set = "<DescriptionSet - " ++ mDescriptionName set ++ ">"
+instance Show MetaDescription where
+  show set = "<MetaDescription - " ++ mDescriptionName set ++ ">"
 
 instance FromJSON Description where
   parseJSON (Object o) = Description <$>
@@ -254,16 +250,10 @@ instance FromJSON Description where
   parseJSON _ = mzero
 
 type MdsMap = Map.Map String [IO Description]
-instance FromJSON MetaDescriptionList where
-  parseJSON (Array a) = MetaDescriptionList <$>
-                            Map.foldMapWithKey (\k v -> [MetaDescriptionSet k v])
-                                  <$> mappedSets
-                  where mappedSets = foldr go (pure Map.empty) (toList a)
-                        go :: Value -> Parser MdsMap -> Parser MdsMap
-                        go (Object o) acc = do
-                          acc' <- acc
-                          (nextName, nextURI) <- (,) <$> o .: "name" <*> (getResource <$> o .: "resource_uri")
-                          return $ Map.insertWith (++) nextName [nextURI] acc'
+instance FromJSON MetaDescription where
+  parseJSON (Object o) = MetaDescription <$>
+                            o .: "name" <*>
+                            (getResource <$> o .: "resource_uri")
 
   parseJSON _ = mzero
 

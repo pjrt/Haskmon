@@ -6,7 +6,81 @@
 -- it contains. For example, a Pokedex does not contain Pokemons, it contains
 -- MetaPokemons (a name and a IO Pokemon function to actually get the pokemon).
 
-module Haskmon.Types where
+module Haskmon.Types(
+                    -- {{{ Exports
+                    -- All types are exported with their functions, but not constructors
+                  Pokemon(
+                      pokemonName , pokemonNationalId , pokemonAbilities , pokemonMoves , pokemonTypes , pokemonEggCycle
+                    , pokemonEggGroups , pokemonCatchRate , pokemonHp , pokemonAttack , pokemonDefense , pokemonSpAtk
+                    , pokemonSpDef , pokemonSpeed , pokemonSprites , pokemonDescriptions , pokemonMetadata
+                  )
+
+                  , MetaPokemon(
+                    mpName , getPokemon
+                  )
+
+                  , Pokedex(
+                    pokedexName , pokedexPokemons
+                  )
+
+                  , MetaAbility(
+                    mAbilityName , getAbility
+                  )
+
+                  , Ability(
+                    abilityName , abilityDescription , abilityMetadata
+                  )
+
+                  , MetaType(
+                    mTypeName , getType
+                  )
+
+                  , Type(
+                    typeName , typeIneffective , typeNoEffect , typeResistance , typeSuperEffective
+                  , typeWeakness , typeMetadata
+                  )
+
+                  , MetaMove(
+                    mMoveName , mMoveLearnType , mLevel , getMove
+                  )
+
+                  , Move(
+                    moveName , movePower , movePp , moveAccuracy , moveMetadata
+                  )
+
+                  , MetaEggGroup(
+                    mEggGroupName , getEggGroup
+                  )
+
+                  , EggGroup(
+                    eggGroupName , eggGroupPokemons , eggGroupMetadata
+                  )
+
+                  , MetaDescription(
+                    mDescriptionName , getDescriptions
+                  )
+
+                  , Description(
+                    descriptionName , descriptionText , descriptionGames , descriptionPokemon , descriptionMetadata
+                  )
+
+                  , MetaGame(
+                    mGameName , getGame
+                  )
+
+                  , Game(
+                    gameName , gameGeneration, gameReleaseYear, gameMetadata
+                  )
+
+                  , MetaSprite(
+                    mSpriteName, getSprite
+                  )
+
+                  , Sprite(
+                    spriteName, spritePokemon, spriteImage
+                  )
+                  -- }}}
+) where
 
 import Data.Word
 import Data.Vector(toList)
@@ -66,7 +140,7 @@ data Pokemon = Pokemon {
                   pokemonMoves :: [MetaMove],
                   pokemonTypes :: [MetaType],
                   pokemonEggCycle :: Word,
-                  pokemonEggGroups :: [MetaEgg],
+                  pokemonEggGroups :: [MetaEggGroup],
                   pokemonCatchRate :: Word,
                   pokemonHp :: Word,
                   pokemonAttack :: Word,
@@ -206,7 +280,8 @@ instance FromJSON MetaMove where
 
 -- }}}
 -- EGGS!!! {{{
-data MetaEgg = MetaEgg { mEggGroupName :: String,
+data MetaEggGroup = MetaEggGroup {
+                         mEggGroupName :: String,
                          getEggGroup :: IO EggGroup
                        }
 data EggGroup = EggGroup { eggGroupName :: String,
@@ -225,8 +300,8 @@ instance FromJSON EggGroup where
 
   parseJSON _ = mzero
 
-instance FromJSON MetaEgg where
-  parseJSON (Object o) = MetaEgg <$>
+instance FromJSON MetaEggGroup where
+  parseJSON (Object o) = MetaEggGroup <$>
                          o .: "name" <*>
                          (getResource <$> o .: "resource_uri")
   parseJSON _ = mzero

@@ -9,6 +9,10 @@
 module Haskmon.Types(
                     -- {{{ Exports
                     -- All types are exported with their functions, but not constructors
+                  MetaData(
+                      resourceUri, created, modified
+                  )
+
                   Pokemon(
                       pokemonName , pokemonNationalId , pokemonAbilities , pokemonMoves , pokemonTypes , pokemonEggCycle
                     , pokemonEggGroups , pokemonCatchRate , pokemonHp , pokemonAttack , pokemonDefense , pokemonSpAtk

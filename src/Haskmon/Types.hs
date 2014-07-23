@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings, FlexibleContexts #-}
 
 -- | All of the types returned by the API. From Pokemons to Abilities
--- Just like the API, the data fields have a nested pointer (IO a) to the reasource
+-- Just like the API, the data fields have a nested pointer (IO a) to the resource
 -- it contains. For example, a Pokedex does not contain Pokemons, it contains
 -- MetaPokemons (a name and a IO Pokemon function to actually get the pokemon).
 
@@ -11,7 +11,7 @@ module Haskmon.Types(
                     -- All types are exported with their functions, but not constructors
                   MetaData(
                       resourceUri, created, modified
-                  )
+                  ),
 
                   Pokemon(
                       pokemonName , pokemonNationalId , pokemonAbilities , pokemonMoves , pokemonTypes , pokemonEggCycle
@@ -45,7 +45,7 @@ module Haskmon.Types(
                   )
 
                   , MetaMove(
-                    mMoveName , mMoveLearnType , mLevel , getMove
+                    mMoveName , mMoveLearnType , getMove
                   )
 
                   , Move(
@@ -251,9 +251,14 @@ instance FromJSON MetaType where
 
 -- }}}
 -- Moves {{{
+data MetaMoveLearnType = LevelUp Int
+                       | Machine
+                       | Tutor
+                       | EggMove
+                       | Other
+
 data MetaMove = MetaMove { mMoveName :: String,
-                           mMoveLearnType :: String,
-                           mLevel :: Maybe Word,
+                           mMoveLearnType :: MetaMoveLearnType,
                            getMove :: IO Move}
 data Move = Move {
               moveName :: String,
@@ -277,9 +282,18 @@ instance FromJSON Move where
 
 instance FromJSON MetaMove where
         parseJSON (Object o) = MetaMove <$> o .: "name" <*>
-                                            o .: "learn_type" <*>
-                                            o .:? "level" <*>
+                                            mmLearnType <*>
                                             (getResource <$> o .: "resource_uri")
+                                        where mmLearnType :: Parser MetaMoveLearnType
+                                              mmLearnType = do
+                                                          learnType <- o .: "learn_type" :: Parser String
+                                                          case learnType of
+                                                              "level_up" -> LevelUp <$> (o .: "level")
+                                                              "machine" -> return Machine
+                                                              "tutor" -> return Tutor
+                                                              "egg_move" -> return EggMove
+                                                              "other" -> return Other
+                                                              _ -> mzero
         parseJSON _ = mzero
 
 -- }}}

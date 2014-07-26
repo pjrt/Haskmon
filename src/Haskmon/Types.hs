@@ -265,9 +265,9 @@ instance Show MetaMove where
 
 data Move = Move {
               moveName :: String,
-              movePower :: Int,
-              movePp :: Int,
-              moveAccuracy :: Int,
+              movePower :: Word,
+              movePp :: Word,
+              moveAccuracy :: Word,
               moveMetadata :: MetaData
             } deriving Show
 

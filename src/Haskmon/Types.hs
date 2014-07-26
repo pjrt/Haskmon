@@ -107,7 +107,7 @@ data MetaData = MetaData {
                   resourceUri :: String,
                   created :: UTCTime,
                   modified :: UTCTime
-                }
+                } deriving Show
 
 getMetadata :: Object -> Parser MetaData
 getMetadata v = MetaData <$>
@@ -117,6 +117,10 @@ getMetadata v = MetaData <$>
               where convert :: Parser String -> Parser UTCTime
                     convert ps = readTime defaultTimeLocale formatStr <$> ps
                     formatStr = "%FT%R:%S%Q"
+
+-- Alias for withObject
+withO o f = withObject "object" f o
+
 -- }}}
 -- Pokedex {{{
 data Pokedex = Pokedex {
@@ -161,7 +165,8 @@ instance Show Pokemon where
   show p = "<Pokemon - " ++ pokemonName p ++ ">"
 
 instance FromJSON Pokemon where
-        parseJSON (Object v) = Pokemon <$>
+        parseJSON o = withO o go
+                       where go v = Pokemon <$>
                                 v .: "name" <*>
                                 v .: "national_id" <*>
                                 v .: "abilities" <*>
@@ -179,7 +184,6 @@ instance FromJSON Pokemon where
                                 v .: "sprites" <*>
                                 v .: "descriptions" <*>
                                 getMetadata v
-        parseJSON _ = mzero
 
 
 --- }}}
@@ -206,16 +210,14 @@ instance Show Ability where
   show a = "<Ability - " ++ abilityName a ++ ">"
 
 instance FromJSON Ability where
-        parseJSON (Object v) = Ability <$>
+        parseJSON o = withO o $ \v -> Ability <$>
                                 v .: "name" <*>
                                 v .: "description" <*>
                                 getMetadata v
-        parseJSON _ = mzero
 
 instance FromJSON MetaAbility where
-        parseJSON (Object o) = MetaAbility <$> o .: "name" <*>
+        parseJSON v = withO v $ \o -> MetaAbility <$> o .: "name" <*>
                                            (getResource <$> o .: "resource_uri")
-        parseJSON _ = mzero
 
 -- }}}
 -- Types {{{
@@ -234,7 +236,7 @@ instance Show Type where
   show t = "<Type - " ++ typeName t ++ ">"
 
 instance FromJSON Type where
-        parseJSON (Object o) = Type <$>
+        parseJSON v = withO v $ \o -> Type <$>
                                 o .: "name" <*>
                                 o .: "ineffective" <*>
                                 o .: "no_effect" <*>
@@ -242,12 +244,10 @@ instance FromJSON Type where
                                 o .: "super_effective" <*>
                                 o .: "weakness" <*>
                                 getMetadata o
-        parseJSON _ = mzero
 
 instance FromJSON MetaType where
-        parseJSON (Object o) = MetaType <$> o .: "name" <*>
+        parseJSON v = withO v $ \o -> MetaType <$> o .: "name" <*>
                                             (getResource <$> o .: "resource_uri")
-        parseJSON _ = mzero
 
 -- }}}
 -- Moves {{{
@@ -272,29 +272,28 @@ instance Show Move where
   show m = "<Move - " ++ moveName m ++ ">"
 
 instance FromJSON Move where
-        parseJSON (Object o) = Move <$>
+        parseJSON v = withO v $ \o -> Move <$>
                                 o .: "name" <*>
                                 o .: "power" <*>
                                 o .: "pp" <*>
                                 o .: "accuracy" <*>
                                 getMetadata o
-        parseJSON _ = mzero
 
 instance FromJSON MetaMove where
-        parseJSON (Object o) = MetaMove <$> o .: "name" <*>
+        parseJSON v = withO v go
+                       where go o = MetaMove <$> o .: "name" <*>
                                             mmLearnType <*>
                                             (getResource <$> o .: "resource_uri")
                                         where mmLearnType :: Parser MetaMoveLearnType
                                               mmLearnType = do
                                                           learnType <- o .: "learn_type" :: Parser String
                                                           case learnType of
-                                                              "level_up" -> LevelUp <$> (o .: "level")
+                                                              "level up" -> LevelUp <$> (o .: "level")
                                                               "machine" -> return Machine
                                                               "tutor" -> return Tutor
-                                                              "egg_move" -> return EggMove
+                                                              "egg move" -> return EggMove
                                                               "other" -> return Other
-                                                              _ -> mzero
-        parseJSON _ = mzero
+                                                              err -> fail $  "expected level_up, machine, tutor, egg_move or other. Got " ++ err
 
 -- }}}
 -- EGGS!!! {{{
@@ -311,18 +310,16 @@ instance Show EggGroup where
   show e = "<EggGroup - " ++ eggGroupName e ++ ">"
 
 instance FromJSON EggGroup where
-  parseJSON (Object o) = EggGroup <$>
+  parseJSON v = withO v $ \o -> EggGroup <$>
                          o .: "name" <*>
                          o .: "pokemon" <*>
                          getMetadata o
 
-  parseJSON _ = mzero
 
 instance FromJSON MetaEggGroup where
-  parseJSON (Object o) = MetaEggGroup <$>
+  parseJSON v = withO v $ \o -> MetaEggGroup <$>
                          o .: "name" <*>
                          (getResource <$> o .: "resource_uri")
-  parseJSON _ = mzero
 --- }}}
 -- Description {{{
 data MetaDescription = MetaDescription {
@@ -344,20 +341,18 @@ instance Show MetaDescription where
   show set = "<MetaDescription - " ++ mDescriptionName set ++ ">"
 
 instance FromJSON Description where
-  parseJSON (Object o) = Description <$>
+  parseJSON v = withO v $ \o -> Description <$>
                             o .: "name" <*>
                             o .: "description" <*>
                             o .: "games" <*>
                             o .: "pokemon" <*>
                             getMetadata o
-  parseJSON _ = mzero
 
 instance FromJSON MetaDescription where
-  parseJSON (Object o) = MetaDescription <$>
+  parseJSON v = withO v $ \o -> MetaDescription <$>
                             o .: "name" <*>
                             (getResource <$> o .: "resource_uri")
 
-  parseJSON _ = mzero
 
 -- }}}
 --  Game {{{
@@ -373,17 +368,15 @@ instance Show Game where
   show g = "<Game - " ++ gameName g ++ ">"
 
 instance FromJSON MetaGame where
-  parseJSON (Object o) = MetaGame <$>
+  parseJSON v = withO v $ \o -> MetaGame <$>
                            o .: "name" <*> (getResource <$> o .: "resource_uri")
-  parseJSON _ = mzero
 
 instance FromJSON Game where
-  parseJSON (Object o) = Game <$>
+  parseJSON v = withO v $ \o -> Game <$>
                           o .: "name"<*>
                           o .: "generation" <*>
                           o .: "release_year" <*>
                           getMetadata o
-  parseJSON _ = mzero
 -- }}}
 -- Sprite {{{
 data MetaSprite = MetaSprite { mSpriteName :: String, getSprite :: IO Sprite }
@@ -397,15 +390,13 @@ instance Show Sprite where
   show s = "<Sprite - " ++ spriteName s ++ ">"
 
 instance FromJSON MetaSprite where
-  parseJSON (Object o) = MetaSprite <$>
+  parseJSON v = withO v $ \o -> MetaSprite <$>
                             o .: "name" <*>
                             (getResource <$> o .: "resource_uri")
-  parseJSON _ = mzero
 
 instance FromJSON Sprite where
-  parseJSON (Object o) = Sprite <$>
+  parseJSON v = withO v $ \o -> Sprite <$>
                             o .: "name" <*>
                             o .: "pokemon" <*>
                             o .: "image"
-  parseJSON _ = mzero
 -- }}}

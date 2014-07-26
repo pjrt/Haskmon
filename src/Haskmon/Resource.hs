@@ -17,5 +17,5 @@ getResource :: FromJSON a => Uri -> IO a
 getResource uri = decodeAndErr <$> get (B8.pack uri') concatHandler
         where uri' = host ++ uri
               decodeAndErr :: FromJSON a => B.ByteString -> a
-              decodeAndErr = either decodeErr id . eitherDecodeStrict
+              decodeAndErr = either decodeErr id . eitherDecodeStrict'
               decodeErr err = error $ "Error parsing resource " ++ uri' ++ ": " ++ err

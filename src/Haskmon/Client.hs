@@ -23,6 +23,12 @@ import qualified Data.Traversable as T
 
 type ID = Word
 
+-- | Utility wrapper for `ById` functions
+getResourceById :: FromJSON a => String -> ID -> IO a
+getResourceById res dbId = getResource $ "api/v1/" ++ res ++ "/" ++ show dbId ++ "/"
+
+----------------------------------------------------------------------------
+
 -- | Get a pokedex. Warning: returns a large list of pokemon resources
 getPokedexById :: ID -> IO Pokedex
 getPokedexById = getResourceById "pokedex"
@@ -72,7 +78,4 @@ getGameById = getResourceById "game"
 getSpriteById :: ID -> IO Sprite
 getSpriteById = getResourceById "sprite"
 
--- | Utility wrapper for `ById` functions
-getResourceById :: FromJSON a => String -> ID -> IO a
-getResourceById res dbId = getResource $ "api/v1/" ++ res ++ "/" ++ show dbId ++ "/"
 

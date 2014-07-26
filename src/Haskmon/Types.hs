@@ -20,7 +20,7 @@ module Haskmon.Types(
                   )
 
                   , MetaPokemon(
-                    mpName , getPokemon
+                    mPokemonName , getPokemon
                   )
 
                   , Pokedex(
@@ -140,7 +140,10 @@ instance FromJSON Pokedex where
 
 -- }}}
 -- Pokemon {{{
-data MetaPokemon = MetaPokemon { mpName :: String, getPokemon :: IO Pokemon }
+data MetaPokemon = MetaPokemon { mPokemonName :: String, getPokemon :: IO Pokemon }
+instance Show MetaPokemon where
+  show p = "<MetaPokemon - " ++ mPokemonName p ++ ">"
+
 data Pokemon = Pokemon {
                   pokemonName :: String,
                   pokemonNationalId :: Word,
@@ -159,10 +162,7 @@ data Pokemon = Pokemon {
                   pokemonSprites :: [MetaSprite],
                   pokemonDescriptions :: [MetaDescription],
                   pokemonMetadata :: MetaData
-             }
-
-instance Show Pokemon where
-  show p = "<Pokemon - " ++ pokemonName p ++ ">"
+             } deriving Show
 
 instance FromJSON Pokemon where
         parseJSON o = withO o go
@@ -201,13 +201,13 @@ data EvolutionMethod = LevelUp { evolutionLevel :: Word }
 -- }}}
 -- Ability {{{
 data MetaAbility = MetaAbility { mAbilityName :: String, getAbility :: IO Ability}
+instance Show MetaAbility where
+  show p = "<MetaAbility - " ++ mAbilityName p ++ ">"
+
 data Ability = Ability { abilityName :: String,
                          abilityDescription :: String,
                          abilityMetadata :: MetaData
-                       }
-
-instance Show Ability where
-  show a = "<Ability - " ++ abilityName a ++ ">"
+                       } deriving Show
 
 instance FromJSON Ability where
         parseJSON o = withO o $ \v -> Ability <$>
@@ -222,6 +222,9 @@ instance FromJSON MetaAbility where
 -- }}}
 -- Types {{{
 data MetaType = MetaType { mTypeName :: String, getType :: IO Type }
+instance Show MetaType where
+  show p = "<MetaType - " ++ mTypeName p ++ ">"
+
 data Type = Type {
             typeName :: String,
             typeIneffective :: [Type],
@@ -230,10 +233,7 @@ data Type = Type {
             typeSuperEffective :: [Type],
             typeWeakness :: [Type],
             typeMetadata :: MetaData
-          }
-
-instance Show Type where
-  show t = "<Type - " ++ typeName t ++ ">"
+          } deriving Show
 
 instance FromJSON Type where
         parseJSON v = withO v $ \o -> Type <$>
@@ -255,21 +255,21 @@ data MetaMoveLearnType = LevelUp Int
                        | Machine
                        | Tutor
                        | EggMove
-                       | Other
+                       | Other  deriving Show
 
 data MetaMove = MetaMove { mMoveName :: String,
                            mMoveLearnType :: MetaMoveLearnType,
                            getMove :: IO Move}
+instance Show MetaMove where
+  show p = "<MetaMove - " ++ mMoveName p ++ ">"
+
 data Move = Move {
               moveName :: String,
               movePower :: Int,
               movePp :: Int,
               moveAccuracy :: Int,
               moveMetadata :: MetaData
-            }
-
-instance Show Move where
-  show m = "<Move - " ++ moveName m ++ ">"
+            } deriving Show
 
 instance FromJSON Move where
         parseJSON v = withO v $ \o -> Move <$>
@@ -301,13 +301,13 @@ data MetaEggGroup = MetaEggGroup {
                          mEggGroupName :: String,
                          getEggGroup :: IO EggGroup
                        }
+instance Show MetaEggGroup where
+  show p = "<MetaEggGroup - " ++ mEggGroupName p ++ ">"
+
 data EggGroup = EggGroup { eggGroupName :: String,
                            eggGroupPokemons :: [MetaPokemon],
                            eggGroupMetadata :: MetaData
-                         }
-
-instance Show EggGroup where
-  show e = "<EggGroup - " ++ eggGroupName e ++ ">"
+                         } deriving Show
 
 instance FromJSON EggGroup where
   parseJSON v = withO v $ \o -> EggGroup <$>
@@ -326,16 +326,14 @@ data MetaDescription = MetaDescription {
                             mDescriptionName :: String,
                             getDescriptions :: IO Description
                           }
+
 data Description = Description {
                     descriptionName :: String,
                     descriptionText :: String,
                     descriptionGames :: [MetaGame],
                     descriptionPokemon :: MetaPokemon,
                     descriptionMetadata :: MetaData
-                   }
-
-instance Show Description where
-  show d = "<Description - " ++ descriptionText d ++ ">"
+                   } deriving Show
 
 instance Show MetaDescription where
   show set = "<MetaDescription - " ++ mDescriptionName set ++ ">"
@@ -357,15 +355,15 @@ instance FromJSON MetaDescription where
 -- }}}
 --  Game {{{
 data MetaGame = MetaGame { mGameName :: String, getGame :: IO Game }
+instance Show MetaGame where
+  show set = "<MetaGame - " ++ mGameName set ++ ">"
+
 data Game = Game {
              gameName :: String,
              gameGeneration :: Word,
              gameReleaseYear :: Word,
              gameMetadata :: MetaData
-            }
-
-instance Show Game where
-  show g = "<Game - " ++ gameName g ++ ">"
+            } deriving Show
 
 instance FromJSON MetaGame where
   parseJSON v = withO v $ \o -> MetaGame <$>
@@ -380,14 +378,14 @@ instance FromJSON Game where
 -- }}}
 -- Sprite {{{
 data MetaSprite = MetaSprite { mSpriteName :: String, getSprite :: IO Sprite }
+instance Show MetaSprite where
+  show set = "<MetaSprite - " ++ mSpriteName set ++ ">"
+
 data Sprite = Sprite {
                 spriteName :: String,
                 spritePokemon :: MetaPokemon,
                 spriteImage :: String -- Just a plain URI
-              }
-
-instance Show Sprite where
-  show s = "<Sprite - " ++ spriteName s ++ ">"
+              } deriving Show
 
 instance FromJSON MetaSprite where
   parseJSON v = withO v $ \o -> MetaSprite <$>

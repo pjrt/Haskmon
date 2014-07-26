@@ -47,7 +47,7 @@ getPokemonByName :: String -- ^ Name of the pokemon
 getPokemonByName name = do
               metaPkms <- pokedexPokemons <$> getNationalPokedex
               let lName = toLower <$> name -- Lowercase it. All names in the pokedex meta are lower
-                  maybePk = find ( (==) lName . mpName) metaPkms
+                  maybePk = find ( (==) lName . mPokemonName) metaPkms
               T.sequence $ fmap getPokemon maybePk
 
 -- | Get an ability by ID

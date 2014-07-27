@@ -12,7 +12,11 @@ import Control.Applicative((<$>))
 -- | Host of the API
 host = "http://pokeapi.co/"
 
+-- | Uri of the resource
 type Uri = String
+
+-- | GET the resource from the URI and parse it into one of the "Haskmon.Types".
+-- Fails if the parsing fails (ie: the library needs to be updated).
 getResource :: FromJSON a => Uri -> IO a
 getResource uri = decodeAndErr <$> get (B8.pack uri') concatHandler
         where uri' = host ++ uri

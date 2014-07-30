@@ -13,7 +13,8 @@ import Haskmon.Types.Internals(MetaData,
                                MetaEggGroup,
                                MetaDescription,
                                Pokedex,
-                               Pokemon)
+                               Pokemon,
+                               Evolution)
 import qualified Haskmon.Types.Internals as I
 
 -- Pokedex
@@ -81,3 +82,7 @@ pokemonDescriptions = I.pokemonDescriptions
 
 pokemonMetadata :: Pokemon -> MetaData
 pokemonMetadata = I.pokemonMetadata
+
+pokemonEvolutions :: Pokemon -> [Evolution]
+pokemonEvolutions = I.pokemonEvolutions
+

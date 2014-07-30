@@ -74,6 +74,7 @@ data Pokemon = Pokemon {
                   pokemonSpAtk :: Word,
                   pokemonSpDef :: Word,
                   pokemonSpeed :: Word,
+                  pokemonEvolutions :: [Evolution],
                   pokemonSprites :: [MetaSprite],
                   pokemonDescriptions :: [MetaDescription],
                   pokemonMetadata :: MetaData
@@ -96,6 +97,7 @@ instance FromJSON Pokemon where
                                 v .: "sp_atk" <*>
                                 v .: "sp_def" <*>
                                 v .: "speed" <*>
+                                v .: "evolutions" <*>
                                 v .: "sprites" <*>
                                 v .: "descriptions" <*>
                                 getMetadata v
@@ -103,16 +105,48 @@ instance FromJSON Pokemon where
 
 --- }}}
 -- Evolution {{{
-{- At the moment, evolutions don't seem to be very consistent or complete (in the Rest API).
- - Ignoring for now
 data Evolution = Evolution {
                     evolutionName :: String,
-                    evolutionMethod :: EvolutionMethod
+                    evolutionMethod :: EvolutionMethod,
                     evolutionPokemon :: IO Pokemon
                  }
-data EvolutionMethod = LevelUp { evolutionLevel :: Word }
-                     | Friendship
--}
+
+instance Show Evolution where
+  show e = "<Evolution - " ++ evolutionName e ++ ">"
+
+data EvolutionMethod = EvolutionLevelUp LevelUpDetail
+                     | EvolutionFriendship
+                     | EvolutionStone
+                     | EvolutionHappiness
+                     | EvolutionTrade
+                     | EvolutionOther -- Plain other...no info whatsoever
+                   deriving Show
+
+data LevelUpDetail = Level Word
+                   | LevelSpecial
+                  deriving Show
+
+instance FromJSON EvolutionMethod where
+  parseJSON o = withO o $ \v ->
+                do method <- v .: "method" :: Parser String
+                   case method of
+                      "trade" -> return EvolutionTrade
+                      "stone" -> return EvolutionStone
+                      "level_up" -> EvolutionLevelUp <$> maybe LevelSpecial Level <$> v .:? "level"
+                      "other" -> go $ v .:? "detail"
+                  where go pt = do str <- pt
+                                   case str of
+                                    Nothing -> return EvolutionOther
+                                    Just "happiness" -> return EvolutionHappiness
+                                    Just "friendship" -> return EvolutionFriendship
+                                    Just l -> fail $ "Expected happiness or friendship, got " ++ l
+
+instance FromJSON Evolution where
+  parseJSON o = withO o $ \v -> Evolution <$>
+                    v .: "to" <*>
+                    parseJSON o <*>
+                    (getResource <$> v .: "resource_uri")
+
 -- }}}
 -- Ability {{{
 data MetaAbility = MetaAbility { mAbilityName :: String, getAbility :: IO Ability}
@@ -166,11 +200,11 @@ instance FromJSON MetaType where
 
 -- }}}
 -- Moves {{{
-data MetaMoveLearnType = LevelUp Int
-                       | Machine
-                       | Tutor
-                       | EggMove
-                       | Other  deriving Show
+data MetaMoveLearnType = MoveLearnLevelUp Word
+                       | MoveLearnMachine
+                       | MoveLearnTutor
+                       | MoveLearnEggMove
+                       | MoveLearnOther  deriving Show
 
 data MetaMove = MetaMove { mMoveName :: String,
                            mMoveLearnType :: MetaMoveLearnType,
@@ -203,11 +237,11 @@ instance FromJSON MetaMove where
                                               mmLearnType = do
                                                           learnType <- o .: "learn_type" :: Parser String
                                                           case learnType of
-                                                              "level up" -> LevelUp <$> (o .: "level")
-                                                              "machine" -> return Machine
-                                                              "tutor" -> return Tutor
-                                                              "egg move" -> return EggMove
-                                                              "other" -> return Other
+                                                              "level up" -> MoveLearnLevelUp <$> (o .: "level")
+                                                              "machine" -> return MoveLearnMachine
+                                                              "tutor" -> return MoveLearnTutor
+                                                              "egg move" -> return MoveLearnEggMove
+                                                              "other" -> return MoveLearnOther
                                                               err -> fail $  "expected level_up, machine, tutor, egg_move or other. Got " ++ err
 
 -- }}}

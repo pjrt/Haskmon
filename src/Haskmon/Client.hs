@@ -24,58 +24,53 @@ import qualified Data.Traversable as T
 type ID = Word
 
 -- | Utility wrapper for `ById` functions
-getResourceById :: FromJSON a => String -> ID -> IO a
-getResourceById res dbId = getResource $ "api/v1/" ++ res ++ "/" ++ show dbId ++ "/"
+getResourceById :: FromJSON a => String -> String -> IO a
+getResourceById res dbId = getResource $ "api/v1/" ++ res ++ "/" ++ dbId ++ "/"
 
 ----------------------------------------------------------------------------
 
 -- | Get a pokedex. Warning: returns a large list of pokemon resources
 getPokedexById :: ID -> IO Pokedex
-getPokedexById = getResourceById "pokedex"
+getPokedexById = getResourceById "pokedex" . show
 
 getNationalPokedex :: IO Pokedex
 getNationalPokedex = getPokedexById 1 -- At the moment, this is the only pokedex
 
 -- | Get a pokemon by ID
 getPokemonById :: ID -> IO Pokemon
-getPokemonById = getResourceById "pokemon"
+getPokemonById = getResourceById "pokemon" . show
 
 -- | Lookup a pokemon by name in the national pokedex
---   WARNING: Calls the pokedex api which returns a big list. It then does a lookup by name on said list.
 getPokemonByName :: String -- ^ Name of the pokemon
-                    -> IO (Maybe Pokemon) -- ^ If no pokemon is found, return IO Nothing
-getPokemonByName name = do
-              metaPkms <- pokedexPokemons <$> getNationalPokedex
-              let lName = toLower <$> name -- Lowercase it. All names in the pokedex meta are lower
-                  maybePk = find ( (==) lName . mPokemonName) metaPkms
-              T.sequence $ fmap getPokemon maybePk
+                    -> IO Pokemon
+getPokemonByName = getResourceById "pokemon"
 
 -- | Get an ability by ID
 getAbilityById :: ID -> IO Ability
-getAbilityById = getResourceById "ability"
+getAbilityById = getResourceById "ability" . show
 
 -- | Get a move by ID
 getMoveById :: ID -> IO Move
-getMoveById = getResourceById "move"
+getMoveById = getResourceById "move" . show
 
 -- | Get a type by ID
 getTypeById :: ID -> IO Type
-getTypeById = getResourceById "type"
+getTypeById = getResourceById "type" . show
 --
 -- | Get a egg group by ID
 getEggGroupById :: ID -> IO EggGroup
-getEggGroupById = getResourceById "egg"
+getEggGroupById = getResourceById "egg" . show
 
 -- | Get a description group by ID
 getDescriptionById :: ID -> IO Description
-getDescriptionById = getResourceById "description"
+getDescriptionById = getResourceById "description" . show
 
 -- | Get a game by ID
 getGameById :: ID -> IO Description
-getGameById = getResourceById "game"
+getGameById = getResourceById "game" . show
 
 -- | Get Sprite by ID
 getSpriteById :: ID -> IO Sprite
-getSpriteById = getResourceById "sprite"
+getSpriteById = getResourceById "sprite" . show
 
 

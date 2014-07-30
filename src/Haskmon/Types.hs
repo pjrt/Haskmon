@@ -9,3 +9,4 @@ import Haskmon.Types.Pokemon as X
 import Haskmon.Types.MetaData as X
 import Haskmon.Types.EggGroup as X
 import Haskmon.Types.Description as X
+import Haskmon.Types.Evolutions as X

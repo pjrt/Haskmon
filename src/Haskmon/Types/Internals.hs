@@ -9,7 +9,7 @@ import Data.Time.Format
 import Data.Time.Clock
 import Data.List(find)
 
-import System.Locale
+import Data.Time.Format (parseTimeOrError)
 
 import Control.Applicative
 import Control.Monad(mzero)
@@ -31,6 +31,7 @@ getMetadata v = MetaData <$>
                     convert (v .: "modified")
               where convert :: Parser String -> Parser UTCTime
                     convert ps = readTime defaultTimeLocale formatStr <$> ps
+                    readTime = parseTimeOrError True
                     formatStr = "%FT%R:%S%Q"
 
 -- Alias for withObject

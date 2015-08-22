@@ -1,5 +1,5 @@
 name:                haskmon
-version:             0.2.0.0
+version:             0.2.1.0
 synopsis:            A haskell wrapper for PokeAPI.co (www.pokeapi.co)
 description:         This is a haskell wrapper for the RESTful api www.pokeapi.co.
                      It defines most of the types and functions in the API.
@@ -29,6 +29,7 @@ library
                        Haskmon.Types.MetaData
                        Haskmon.Types.EggGroup
                        Haskmon.Types.Description
+                       Haskmon.Types.Evolutions
   build-depends:       base >=4.8 && <4.9,
                        http-streams >=0.8 && < 0.9,
                        bytestring >=0.10.0.2 && < 0.11,

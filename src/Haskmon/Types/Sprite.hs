@@ -3,7 +3,6 @@ module Haskmon.Types.Sprite(
     I.Sprite, I.MetaSprite
 ) where
 
-import Data.Word
 import Haskmon.Types.Internals(MetaPokemon, MetaSprite, Sprite)
 import qualified Haskmon.Types.Internals as I
 

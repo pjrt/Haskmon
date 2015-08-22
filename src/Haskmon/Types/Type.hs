@@ -3,7 +3,6 @@ module Haskmon.Types.Type(
     I.Type, I.MetaType
 ) where
 
-import Data.Word
 import Haskmon.Types.Internals(MetaData, MetaType, Type)
 import qualified Haskmon.Types.Internals as I
 

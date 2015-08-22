@@ -3,7 +3,6 @@ module Haskmon.Types.Move(
     I.Move, I.MetaMove
 ) where
 
-import Data.Word
 import Haskmon.Types.Internals(MetaData, MetaMove, Move, MetaMoveLearnType)
 import qualified Haskmon.Types.Internals as I
 

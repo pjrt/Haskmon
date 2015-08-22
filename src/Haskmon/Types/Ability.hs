@@ -3,7 +3,6 @@ module Haskmon.Types.Ability(
     I.Ability, I.MetaAbility
 ) where
 
-import Data.Word
 import Haskmon.Types.Internals(MetaData, MetaAbility, Ability)
 import qualified Haskmon.Types.Internals as I
 

@@ -1,6 +1,5 @@
 module Haskmon.Types.Game where
 
-import Data.Word
 import Haskmon.Types.Internals(MetaData, MetaGame, Game)
 import qualified Haskmon.Types.Internals as I
 

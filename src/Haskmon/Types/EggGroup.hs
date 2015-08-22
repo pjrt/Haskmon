@@ -3,7 +3,6 @@ module Haskmon.Types.EggGroup(
     I.EggGroup, I.MetaEggGroup
 ) where
 
-import Data.Word
 import Haskmon.Types.Internals(MetaData, MetaEggGroup, EggGroup, MetaPokemon)
 import qualified Haskmon.Types.Internals as I
 

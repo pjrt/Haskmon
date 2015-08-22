@@ -3,7 +3,6 @@ module Haskmon.Types.Description(
     I.Description, I.MetaDescription
 ) where
 
-import Data.Word
 import Haskmon.Types.Internals(MetaData, MetaPokemon, MetaGame, MetaDescription, Description)
 import qualified Haskmon.Types.Internals as I
 

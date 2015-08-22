@@ -1,15 +1,13 @@
 -- Resource getter. Used by everything else
 module Haskmon.Resource(getResource) where
 
-import Data.Word
 import Data.Aeson
-import Data.Either
 import Network.Http.Client
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as B8
-import Control.Applicative((<$>))
 
 -- | Host of the API
+host :: String
 host = "http://pokeapi.co/"
 
 -- | Uri of the resource

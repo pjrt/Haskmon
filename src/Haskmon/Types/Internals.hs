@@ -1,17 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Haskmon.Types.Internals where
 
-import Data.Word
-import Data.Vector(toList)
 import Data.Aeson
 import Data.Aeson.Types
 import Data.Time.Format
 import Data.Time.Clock
-import Data.List(find)
 
-import Data.Time.Format (parseTimeOrError)
-
-import Control.Applicative
 import Control.Monad(mzero)
 
 import Haskmon.Resource(getResource)
@@ -30,11 +24,12 @@ getMetadata v = MetaData <$>
                     convert (v .: "created") <*>
                     convert (v .: "modified")
               where convert :: Parser String -> Parser UTCTime
-                    convert ps = readTime defaultTimeLocale formatStr <$> ps
-                    readTime = parseTimeOrError True
+                    convert ps = readTime' defaultTimeLocale formatStr <$> ps
+                    readTime' = parseTimeOrError True
                     formatStr = "%FT%R:%S%Q"
 
 -- Alias for withObject
+withO :: Value -> (Object -> Parser a) -> Parser a
 withO o f = withObject "object" f o
 
 -- }}}
@@ -48,7 +43,8 @@ instance Show Pokedex where
   show p = "<Pokedex - " ++ pokedexName p ++ ">"
 
 instance FromJSON MetaPokemon where
-  parseJSON (Object o) = MetaPokemon <$> o .: "name" <*> (getResource <$> o .: "resource_uri")
+  parseJSON v = withO v $
+                \o -> MetaPokemon <$> o .: "name" <*> (getResource <$> o .: "resource_uri")
 
 instance FromJSON Pokedex where
   parseJSON (Object o) = Pokedex <$> o .: "name" <*> o .: "pokemon"
@@ -135,6 +131,7 @@ instance FromJSON EvolutionMethod where
                       "stone" -> return EvolutionStone
                       "level_up" -> EvolutionLevelUp <$> maybe LevelSpecial Level <$> v .:? "level"
                       "other" -> go $ v .:? "detail"
+                      els -> fail $ "Expected an Evolution type. Got " ++ els
                   where go pt = do str <- pt
                                    case str of
                                     Nothing -> return EvolutionOther

@@ -14,12 +14,7 @@ module Haskmon.Client(
 
 import Haskmon.Types
 import Haskmon.Resource(getResource)
-import Data.Word
 import Data.Aeson(FromJSON)
-import Data.List(find)
-import Data.Char(toLower)
-import Control.Applicative((<$>))
-import qualified Data.Traversable as T
 
 type ID = Word
 

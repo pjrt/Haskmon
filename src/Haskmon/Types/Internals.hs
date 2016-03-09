@@ -115,7 +115,7 @@ data EvolutionMethod = EvolutionLevelUp LevelUpDetail
                      | EvolutionFriendship
                      | EvolutionStone
                      | EvolutionHappiness
-                     | EvolutionMega
+                     | EvolutionMega -- ^ @since 0.2.2.0
                      | EvolutionTrade
                      | EvolutionOther -- Plain other...no info whatsoever
                    deriving Show

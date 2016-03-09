@@ -115,6 +115,7 @@ data EvolutionMethod = EvolutionLevelUp LevelUpDetail
                      | EvolutionFriendship
                      | EvolutionStone
                      | EvolutionHappiness
+                     | EvolutionMega
                      | EvolutionTrade
                      | EvolutionOther -- Plain other...no info whatsoever
                    deriving Show
@@ -135,8 +136,9 @@ instance FromJSON EvolutionMethod where
                   where go pt = do str <- pt
                                    case str of
                                     Nothing -> return EvolutionOther
-                                    Just "happiness" -> return EvolutionHappiness
+                                    Just "happiness"  -> return EvolutionHappiness
                                     Just "friendship" -> return EvolutionFriendship
+                                    Just "mega"       -> return EvolutionMega
                                     Just l -> fail $ "Expected happiness or friendship, got " ++ l
 
 instance FromJSON Evolution where
